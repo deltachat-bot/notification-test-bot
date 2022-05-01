@@ -1,10 +1,9 @@
 use async_std::channel;
-use deltachat::contact::{Contact, ContactId};
+use deltachat::contact::{ContactId};
 use futures_lite::future::FutureExt;
-use rand::{thread_rng, Rng};
+use rand::{Rng};
 use std::env::{current_dir, vars};
 use std::sync::Arc;
-use std::thread;
 use std::time::{Duration, SystemTime};
 
 use anyhow::{Context as _, Result};
@@ -172,7 +171,7 @@ async fn main() -> anyhow::Result<()> {
     let notify_loop = async_std::task::spawn(async move {
         let mut rng = rand::rngs::OsRng;
         loop {
-            thread::sleep(Duration::from_secs(rng.gen_range(5..60) * 60));
+            async_std::task::sleep(Duration::from_secs(rng.gen_range(5..60))).await;
 
             for (key, _) in db_clone.iter().filter(|r| r.is_ok()).map(|r| r.unwrap()) {
                 let contact_id = ContactId::new(
