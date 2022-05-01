@@ -171,7 +171,7 @@ async fn main() -> anyhow::Result<()> {
     let notify_loop = async_std::task::spawn(async move {
         let mut rng = rand::rngs::OsRng;
         loop {
-            async_std::task::sleep(Duration::from_secs(rng.gen_range(5..60))).await;
+            async_std::task::sleep(Duration::from_secs(rng.gen_range(13..100)*60)).await;
 
             for (key, _) in db_clone.iter().filter(|r| r.is_ok()).map(|r| r.unwrap()) {
                 let contact_id = ContactId::new(
