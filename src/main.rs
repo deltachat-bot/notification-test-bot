@@ -5,11 +5,11 @@ use futures_lite::future::FutureExt;
 use rand::Rng;
 use std::env::{current_dir, vars};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration};
 
 use anyhow::{Context as _, Result};
 use deltachat::chat::*;
-use deltachat::config;
+use deltachat::config::{self, Config};
 use deltachat::constants::Chattype;
 use deltachat::context::*;
 use deltachat::message::*;
@@ -47,7 +47,7 @@ async fn handle_message(
                     .is_ok()
                 {
                     let mut message = Message::new(Viewtype::Text);
-                    message.set_text(Some("subscribed".to_owned()));
+                    message.set_text(Some("🔔subscribed".to_owned()));
                     send_msg(ctx, chat_id, &mut message).await?;
                 } else {
                     let mut message = Message::new(Viewtype::Text);
@@ -55,13 +55,13 @@ async fn handle_message(
                     send_msg(ctx, chat_id, &mut message).await?;
                 }
             }
-            "/unsubscribe" | "/out" => {
+            "/unsubscribe" | "/unsub" | "/out" => {
                 if database
                     .remove(msg.get_from_id().to_u32().to_string())
                     .is_ok()
                 {
                     let mut message = Message::new(Viewtype::Text);
-                    message.set_text(Some("unsubscribed".to_owned()));
+                    message.set_text(Some("🔕unsubscribed".to_owned()));
                     send_msg(ctx, chat_id, &mut message).await?;
                 } else {
                     let mut message = Message::new(Viewtype::Text);
@@ -73,10 +73,10 @@ async fn handle_message(
                 let mut message = Message::new(Viewtype::Text);
                 message.set_text(Some(
                     "🕭 Notification-Test-Bot\n\
-Sends you messages at random intervals for testing.\n\n\
+Sends you messages at random intervals for testing. (between 13min to 2h)\n\n\
 USAGE:\n\
 🔔 /subscribe | /sub  - to subscribe to the bot\n\
-🔕 /unsubscribe | /out - to unsubscribe"
+🔕 /unsubscribe | /unsub | /out - to unsubscribe"
                         .to_owned(),
                 ));
                 send_msg(ctx, chat_id, &mut message).await?;
@@ -176,7 +176,7 @@ async fn main() -> anyhow::Result<()> {
     let notify_loop = async_std::task::spawn(async move {
         let mut rng = rand::rngs::OsRng;
         loop {
-            async_std::task::sleep(Duration::from_secs(rng.gen_range(13..100) * 60)).await;
+            async_std::task::sleep(Duration::from_secs(rng.gen_range(13..120) * 60)).await;
 
             for (key, _) in db_clone.iter().filter(|r| r.is_ok()).map(|r| r.unwrap()) {
                 let contact_id = ContactId::new(
@@ -193,13 +193,15 @@ async fn main() -> anyhow::Result<()> {
 
                 let now: DateTime<Utc> = Utc::now();
 
-                message.set_text(Some(format!("test message, sent at {:?}", now)));
+                message.set_text(Some(format!("Test message, sent at {:?}\nTo unsubscribe send /out", now)));
                 send_msg(&ctx_clone, contact_chat_id, &mut message)
                     .await
                     .unwrap();
             }
         }
     });
+
+    ctx.set_config(Config::Displayname, Some("🔔 Notification Test Bot")).await.unwrap();
 
     // wait for ctrl+c or event
     while let Some(event) = async {
