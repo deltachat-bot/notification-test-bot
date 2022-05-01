@@ -1,7 +1,8 @@
 use async_std::channel;
-use deltachat::contact::{ContactId};
+use chrono::{DateTime, Utc};
+use deltachat::contact::ContactId;
 use futures_lite::future::FutureExt;
-use rand::{Rng};
+use rand::Rng;
 use std::env::{current_dir, vars};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -71,9 +72,13 @@ async fn handle_message(
             _ => {
                 let mut message = Message::new(Viewtype::Text);
                 message.set_text(Some(
-            "/subscribe | /sub  - to subscribe to the bot\n/unsubscribe | /out - to unsubscribe"
-                .to_owned(),
-        ));
+                    "🕭 Notification-Test-Bot\n\
+Sends you messages at random intervals for testing.\n\n\
+USAGE:\n\
+🔔 /subscribe | /sub  - to subscribe to the bot\n\
+🔕 /unsubscribe | /out - to unsubscribe"
+                        .to_owned(),
+                ));
                 send_msg(ctx, chat_id, &mut message).await?;
             }
         }
@@ -171,7 +176,7 @@ async fn main() -> anyhow::Result<()> {
     let notify_loop = async_std::task::spawn(async move {
         let mut rng = rand::rngs::OsRng;
         loop {
-            async_std::task::sleep(Duration::from_secs(rng.gen_range(13..100)*60)).await;
+            async_std::task::sleep(Duration::from_secs(rng.gen_range(13..100) * 60)).await;
 
             for (key, _) in db_clone.iter().filter(|r| r.is_ok()).map(|r| r.unwrap()) {
                 let contact_id = ContactId::new(
@@ -186,10 +191,9 @@ async fn main() -> anyhow::Result<()> {
                     .await
                     .unwrap();
 
-                message.set_text(Some(format!(
-                    "test message, sent at {:?}",
-                    SystemTime::now()
-                )));
+                let now: DateTime<Utc> = Utc::now();
+
+                message.set_text(Some(format!("test message, sent at {:?}", now)));
                 send_msg(&ctx_clone, contact_chat_id, &mut message)
                     .await
                     .unwrap();
