@@ -1,0 +1,15 @@
+[package]
+name = "notification-test-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.57"
+async-std = { version = "1.11.0", features = ["attributes"]}
+deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", tag="1.78.0"}
+ctrlc = { version = "3.1.7", features = ["termination"] }
+futures-lite = "1.11.2"
+sled = "0.34.7"
+rand = "0.8.5"
