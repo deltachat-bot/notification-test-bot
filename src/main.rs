@@ -169,7 +169,7 @@ async fn main() -> anyhow::Result<()> {
     let ctx_clone = ctx.clone();
     let db_clone = database.clone();
 
-    async_std::task::spawn(async move {
+    let notify_loop = async_std::task::spawn(async move {
         let mut rng = rand::rngs::OsRng;
         loop {
             thread::sleep(Duration::from_secs(rng.gen_range(5..60) * 60));
@@ -210,6 +210,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     println!("stopping");
+    notify_loop.cancel().await;
     ctx.stop_io().await;
     println!("closing");
     drop(ctx);
